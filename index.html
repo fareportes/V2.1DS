@@ -307,6 +307,7 @@
                             <th style="width: 20%; text-align: center;">Puesto</th>
                             <th>Sucursal</th>
                             <th style="text-align: right;">Cantidad Vendida</th>
+                            <th style="text-align: right;">Prom. Venta (3 meses)</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -1948,13 +1949,14 @@
             if (mapaTop10Ventas[nombreProducto] && mapaTop10Ventas[nombreProducto].length > 0) {
                 subText.innerText = "Sucursales ordenadas por rotación comercial.";
                 mapaTop10Ventas[nombreProducto].slice(0, 10).forEach((item, idx) => {
+                    const promedio3Meses = Math.round(item.quantity / 3);
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `<td style="text-align: center; font-weight: bold;">#${idx + 1}</td><td><span class="badge badge-sucursal">${item.sucursal}</span></td><td style="text-align: right; font-weight: bold;">${item.quantity.toLocaleString('es-HN')}</td>`;
+                    tr.innerHTML = `<td style="text-align: center; font-weight: bold;">#${idx + 1}</td><td><span class="badge badge-sucursal">${item.sucursal}</span></td><td style="text-align: right; font-weight: bold;">${item.quantity.toLocaleString('es-HN')}</td><td style="text-align: right;">${promedio3Meses.toLocaleString('es-HN')}</td>`;
                     tbody.appendChild(tr);
                 });
             } else {
                 subText.innerText = "⚠️ No hay historial de venta masiva cargado.";
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; font-style:italic; padding:20px;">Suba el archivo Ventas en el panel Admin.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999; font-style:italic; padding:20px;">Suba el archivo Ventas en el panel Admin.</td></tr>`;
             }
             document.getElementById('top10-modal').style.display = 'block';
         }
