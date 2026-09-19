@@ -58,6 +58,74 @@
             gap: 20px;
         }
 
+        .tabs-nav {
+            display: flex;
+            gap: 6px;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            width: auto;
+            background: none;
+            color: #555;
+            border: none;
+            border-bottom: 3px solid transparent;
+            border-radius: 6px 6px 0 0;
+            padding: 12px 18px;
+            font-weight: 600;
+            font-size: 0.95em;
+            cursor: pointer;
+        }
+
+        .tab-btn:hover {
+            background-color: #eef2f7;
+            opacity: 1;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+            background-color: #eef2f7;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-grid-responsive {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0 20px;
+        }
+
+        .pleca-toggle {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            background-color: #eafbf0;
+            color: #1b5e20;
+            font-weight: bold;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .pleca-toggle:hover {
+            background-color: #d7f5e0;
+        }
+
+        .pleca-toggle.activo {
+            background-color: #28a745;
+            color: #fff;
+            border-color: #1e7e34;
+        }
+
         @media (max-width: 992px) {
             .grid { grid-template-columns: 1fr; }
         }
@@ -93,6 +161,13 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
             box-sizing: border-box;
+        }
+
+        select:disabled {
+            background-color: #eef2f7;
+            color: #555;
+            cursor: not-allowed;
+            font-weight: 600;
         }
 
         .select-interactivo {
@@ -339,6 +414,7 @@
             </div>
             <div>
                 <button class="btn-secondary" onclick="sincronizarManual()" title="Reemplaza la vista actual con lo que hay guardado en Google Sheets">🔄 Sincronizar</button>
+                <button class="btn-secondary" onclick="cambiarMiContrasena()" title="Cambiar la contraseña de tu propia cuenta">🔑 Cambiar mi Contraseña</button>
                 <button class="btn-secondary" onclick="logout()">Cerrar Sesión</button>
             </div>
         </header>
@@ -382,33 +458,18 @@
                 </div>
             </div>
 
-            <div class="card" id="dashboard-resumen-fa-card" style="display:none;">
-                <h2 style="margin:0 0 5px 0;">🏢 Resumen por FA (todas las sucursales)</h2>
-                <p style="color:#666; font-size:0.85em; margin: 0 0 15px 0;">
-                    Desglose de productos en riesgo con venta en otras FA, por sucursal de origen. Respeta los filtros de Mes Venc., Mes Reg., Política y Estado Gestión (no el de Sucursal, para poder comparar todas). Clic en una fila para filtrar esa FA en el reporte.
-                </p>
-                <div style="overflow-x:auto;">
-                    <table id="tabla-resumen-fa" style="width:100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="border-bottom: 2px solid var(--border-color); text-align:left;">
-                                <th style="padding:8px;">FA</th>
-                                <th style="padding:8px; text-align:right;">Total en Riesgo</th>
-                                <th style="padding:8px; text-align:right;">⏳ Pendientes</th>
-                                <th style="padding:8px; text-align:right;">✅ Trabajados</th>
-                                <th style="padding:8px;">Avance</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-resumen-fa-body"></tbody>
-                    </table>
-                </div>
+            <div class="tabs-nav" id="tabs-nav">
+                <button type="button" class="tab-btn active" id="tab-btn-registro" onclick="cambiarTab('tab-registro')">📋 Registro y Listado de Productos</button>
+                <button type="button" class="tab-btn" id="tab-btn-carga" onclick="cambiarTab('tab-carga')" style="display:none;">📁 Carga de Archivos</button>
+                <button type="button" class="tab-btn" id="tab-btn-resumen" onclick="cambiarTab('tab-resumen')" style="display:none;">🏢 Resumen por FA</button>
             </div>
 
-            <div class="grid">
-                
-                <div>
-                    <div class="card">
-                        <h2>Registrar Producto</h2>
-                        <form id="vencidos-form" onsubmit="guardarProducto(event)">
+            <div id="tab-registro" class="tab-content active">
+
+                <div class="card">
+                    <h2>Registrar Producto</h2>
+                    <form id="vencidos-form" onsubmit="guardarProducto(event)">
+                        <div class="form-grid-responsive">
                             <div class="form-group">
                                 <label for="prod-sucursal">Sucursal:</label>
                                 <input type="text" id="prod-sucursal" list="sucursales-list" required placeholder="Escriba para buscar sucursal (FA01 - FA118)...">
@@ -451,14 +512,116 @@
                                 <label for="prod-date">Fecha de Vencimiento:</label>
                                 <input type="date" id="prod-date" required>
                             </div>
-                            <div class="form-group" id="form-diagnostico-container" style="display: none; margin-top: 10px;">
-                                <label>Diagnóstico por Viñeta:</label>
-                                <div id="form-diagnostico-badge" style="padding: 10px; border-radius: 4px; font-weight: bold; text-align: center;"></div>
-                            </div>
-                            <button type="submit" class="btn-success">Agregar al Reporte</button>
-                        </form>
+                        </div>
+                        <div class="form-group" id="form-diagnostico-container" style="display: none; margin-top: 10px;">
+                            <label>Diagnóstico por Viñeta:</label>
+                            <div id="form-diagnostico-badge" style="padding: 10px; border-radius: 4px; font-weight: bold; text-align: center;"></div>
+                        </div>
+                        <button type="submit" class="btn-success">Agregar al Reporte</button>
+                    </form>
+                </div>
+
+                <div>
+                    <div id="admin-export-section" style="display: none;">
+                        <button onclick="exportarAReporteExcelAvanzado()" class="btn-excel">📊 Exportar Plan Comercial con Filas Agrupadas (.xls)</button>
                     </div>
 
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-color); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h2 id="reporte-titulo" style="margin: 0; border: none; padding: 0;">Reporte de Vencidos</h2>
+                                <span id="dash-filtro-activo-badge" style="display:none; font-size:0.8em; color: var(--primary-color); cursor:pointer;" onclick="quitarFiltroDashboardRiesgo()">
+                                    🔎 Filtro de riesgo activo — <span style="text-decoration:underline;">quitar</span>
+                                </span>
+                            </div>
+                            <div>
+                                <span class="badge badge-date">📅 Fecha de Hoy: <strong id="fecha-actual-header"></strong></span>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btn-recuperables-salientes" class="pleca-toggle" onclick="toggleRecuperablesSalientes()" title="Muestra productos Recuperables cuyo vencimiento cae dentro de la ventana de anticipación definida por su política (ej: si la política dice '2 meses', se activa desde 2 meses antes de vencer)">
+                            🟢 Recuperables Salientes
+                        </button>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label for="buscador-producto" style="font-size: 0.9em;">🔍 Buscar producto:</label>
+                            <input type="text" id="buscador-producto" oninput="actualizarTablaReporte()" placeholder="Escriba el nombre del producto para filtrar los registros..." style="width:100%; box-sizing:border-box;">
+                        </div>
+
+                        <div id="admin-filters-container" style="display: none;">
+                            <div class="filter-box">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="filter-sucursal" style="font-size: 0.9em;">Sucursal:</label>
+                                    <select id="filter-sucursal" onchange="actualizarTablaReporte()">
+                                        <option value="">-- Todas --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="filter-mes-venc" style="font-size: 0.9em;">Mes Venc.:</label>
+                                    <select id="filter-mes-venc" onchange="actualizarTablaReporte()">
+                                        <option value="">-- Todos --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="filter-mes-registro" style="font-size: 0.9em;">Mes Reg.:</label>
+                                    <select id="filter-mes-registro" onchange="actualizarTablaReporte()">
+                                        <option value="">-- Todos --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="filter-recuperacion" style="font-size: 0.9em;">Política:</label>
+                                    <select id="filter-recuperacion" onchange="actualizarTablaReporte()">
+                                        <option value="">-- Todos --</option>
+                                        <option value="Recuperable">Recuperable</option>
+                                        <option value="Irrecuperable">Irrecuperable</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label for="filter-estado-gestion" style="font-size: 0.9em;">Estado Gestión:</label>
+                                    <select id="filter-estado-gestion" onchange="actualizarTablaReporte()">
+                                        <option value="">-- Todos --</option>
+                                        <option value="Pendiente">Pendiente</option>
+                                        <option value="Traslado a otra FA">Traslado a otra FA</option>
+                                        <option value="Enviado a FA Bodega">Enviado a FA Bodega</option>
+                                        <option value="Venta en sucursal">Venta en sucursal</option>
+                                        <option value="Salida irrecuperable">Salida irrecuperable</option>
+                                        <option value="Impulsado">Impulsado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p id="tip-modal-msg" style="color:#555; font-size:0.88em; margin-bottom:10px;"><strong style="color:var(--primary-color);">💡 Tip:</strong> Toca el nombre de cualquier producto para ver qué farmacias lo venden más.</p>
+
+                        <div style="overflow-x: auto;">
+                            <table id="reporte-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sucursal</th>
+                                        <th>Producto</th>
+                                        <th>Laboratorio</th>
+                                        <th>Viñeta</th>
+                                        <th>Cant. Vencida</th>
+                                        <th>Estado Política</th>
+                                        <th>Venta Sucursal</th>
+                                        <th>Estado Gestión (Interactiva)</th>
+                                        <th>Mes Venc.</th>
+                                        <th>Año Venc.</th>
+                                        <th>Fecha Venc.</th>
+                                        <th>Registrado Por</th>
+                                        <th>Registrado El</th>
+                                        <th id="th-acciones-reporte" style="display: none;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="tab-carga" class="tab-content">
                     <div id="admin-panel" class="card">
                         <h2>Cargar Políticas de Vencidos (.xlsx)</h2>
                         <div style="background-color: #fff8e1; padding: 12px; border-radius: 6px; margin-bottom: 20px; border: 1px dashed #ffb300;">
@@ -525,116 +688,59 @@
                             <button type="submit">Crear Usuario</button>
                         </form>
 
-                        <h3 style="margin-top: 25px; font-size: 1.1em;">Usuarios Registrados y Permisos</h3>
-                        <div style="overflow-x: auto;">
-                            <table id="users-table">
-                                <thead>
-                                    <tr>
-                                        <th>Usuario</th>
-                                        <th style="text-align: center; width: 110px;">Permisos</th>
-                                        <th style="text-align: center; width: 90px;">FA</th>
-                                        <th style="text-align: right;">Acciones de Cuenta</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <div id="admin-export-section" style="display: none;">
-                        <button onclick="exportarAReporteExcelAvanzado()" class="btn-excel">📊 Exportar Plan Comercial con Filas Agrupadas (.xls)</button>
-                    </div>
-
-                    <div class="card">
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-color); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                            <div>
-                                <h2 id="reporte-titulo" style="margin: 0; border: none; padding: 0;">Reporte de Vencidos</h2>
-                                <span id="dash-filtro-activo-badge" style="display:none; font-size:0.8em; color: var(--primary-color); cursor:pointer;" onclick="quitarFiltroDashboardRiesgo()">
-                                    🔎 Filtro de riesgo activo — <span style="text-decoration:underline;">quitar</span>
-                                </span>
+                        <div id="lista-usuarios-container" style="display:none;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 25px;">
+                                <h3 style="font-size: 1.1em; margin: 0;">Usuarios Registrados y Permisos</h3>
+                                <button type="button" class="btn-secondary" id="btn-toggle-usuarios" style="width:auto; padding:6px 12px; font-size:0.85em;" onclick="toggleTablaUsuarios()">👁️ Mostrar Usuarios</button>
                             </div>
-                            <div>
-                                <span class="badge badge-date">📅 Fecha de Hoy: <strong id="fecha-actual-header"></strong></span>
+                            <div id="users-table-wrapper" style="overflow-x: auto; display:none;">
+                                <table id="users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Usuario</th>
+                                            <th style="text-align: center; width: 110px;">Permisos</th>
+                                            <th style="text-align: center; width: 90px;">FA</th>
+                                            <th style="text-align: right;">Acciones de Cuenta</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
                         </div>
-
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label for="buscador-producto" style="font-size: 0.9em;">🔍 Buscar producto:</label>
-                            <input type="text" id="buscador-producto" oninput="actualizarTablaReporte()" placeholder="Escriba el nombre del producto para filtrar los registros..." style="width:100%; box-sizing:border-box;">
-                        </div>
-
-                        <div id="admin-filters-container" style="display: none;">
-                            <div class="filter-box">
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="filter-sucursal" style="font-size: 0.9em;">Sucursal:</label>
-                                    <select id="filter-sucursal" onchange="actualizarTablaReporte()">
-                                        <option value="">-- Todas --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="filter-mes-venc" style="font-size: 0.9em;">Mes Venc.:</label>
-                                    <select id="filter-mes-venc" onchange="actualizarTablaReporte()">
-                                        <option value="">-- Todos --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="filter-mes-registro" style="font-size: 0.9em;">Mes Reg.:</label>
-                                    <select id="filter-mes-registro" onchange="actualizarTablaReporte()">
-                                        <option value="">-- Todos --</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="filter-recuperacion" style="font-size: 0.9em;">Política:</label>
-                                    <select id="filter-recuperacion" onchange="actualizarTablaReporte()">
-                                        <option value="">-- Todos --</option>
-                                        <option value="Recuperable">Recuperable</option>
-                                        <option value="Irrecuperable">Irrecuperable</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 0;">
-                                    <label for="filter-estado-gestion" style="font-size: 0.9em;">Estado Gestión:</label>
-                                    <select id="filter-estado-gestion" onchange="actualizarTablaReporte()">
-                                        <option value="">-- Todos --</option>
-                                        <option value="Pendiente">Pendiente</option>
-                                        <option value="Trabajado">Trabajado</option>
-                                        <option value="Enviado">Enviado</option>
-                                        <option value="Impulsado">Impulsado</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p id="tip-modal-msg" style="color:#555; font-size:0.88em; margin-bottom:10px;"><strong style="color:var(--primary-color);">💡 Tip:</strong> Toca el nombre de cualquier producto para ver qué farmacias lo venden más.</p>
-
-                        <div style="overflow-x: auto;">
-                            <table id="reporte-table">
-                                <thead>
-                                    <tr>
-                                        <th>Sucursal</th>
-                                        <th>Producto</th>
-                                        <th>Laboratorio</th>
-                                        <th>Viñeta</th>
-                                        <th>Cant. Vencida</th>
-                                        <th>Estado Política</th>
-                                        <th>Venta Sucursal</th>
-                                        <th>Estado Gestión (Interactiva)</th>
-                                        <th>Mes Venc.</th>
-                                        <th>Año Venc.</th>
-                                        <th>Fecha Venc.</th>
-                                        <th>Registrado Por</th>
-                                        <th>Registrado El</th>
-                                        <th id="th-acciones-reporte" style="display: none;">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
-                        </div>
+                        <p id="lista-usuarios-restringido-msg" style="display:none; color:#6c757d; font-size:0.85em; font-style:italic; margin-top:25px;">
+                            🔒 Solo un Super Usuario puede ver el listado de usuarios registrados.
+                        </p>
                     </div>
-                </div>
-
             </div>
+
+            <div id="tab-resumen" class="tab-content">
+                <div class="card" id="dashboard-resumen-fa-card">
+                    <h2 style="margin:0 0 5px 0;">🏢 Resumen por FA (todas las sucursales)</h2>
+                    <p style="color:#666; font-size:0.85em; margin: 0 0 15px 0;">
+                        Desglose de productos en riesgo con venta en otras FA, por sucursal de origen, con detalle de cuántas gestiones se han realizado y de qué tipo. Respeta los filtros de Mes Venc., Mes Reg., Política y Estado Gestión (no el de Sucursal, para poder comparar todas). Clic en una fila para filtrar esa FA en el reporte.
+                    </p>
+                    <div style="overflow-x:auto;">
+                        <table id="tabla-resumen-fa" style="width:100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border-color); text-align:left;">
+                                    <th style="padding:8px;">FA</th>
+                                    <th style="padding:8px; text-align:right;">Total en Riesgo</th>
+                                    <th style="padding:8px; text-align:right;">⏳ Pendientes</th>
+                                    <th style="padding:8px; text-align:right;">🔁 Traslado</th>
+                                    <th style="padding:8px; text-align:right;">📦 Env. Bodega</th>
+                                    <th style="padding:8px; text-align:right;">🛒 Venta Suc.</th>
+                                    <th style="padding:8px; text-align:right;">❌ Irrecuperable</th>
+                                    <th style="padding:8px; text-align:right;">🚀 Impulsado</th>
+                                    <th style="padding:8px; text-align:right;">✅ Total Gestionado</th>
+                                    <th style="padding:8px;">Avance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-resumen-fa-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -652,6 +758,7 @@
         // Estado del filtro del Dashboard de Riesgo (venta en otras FA)
         let filtroSoloRiesgoOtraFA = false;
         let filtroGestionAgrupadoRiesgo = ''; // '' | 'pendiente' | 'trabajado'
+        let filtroRecuperablesSalientes = false; // true = solo Recuperables dentro de la ventana de meses de su política
 
         // ── MÓDULO DE INDEXEDDB PARA CACHÉ MASIVA DE VENTAS (+240k registros) ──
         const DB_NAME = "ControlVencidosDB";
@@ -731,6 +838,60 @@
             "Siman", "Unipharm"
         ];
 
+        // Laboratorios que, aunque no tengan una viñeta propia en listaVinetasFijas,
+        // se manejan comercialmente bajo la viñeta "Leterago". Cuando el Laboratorio
+        // de un producto coincide con alguno de estos (sin distinguir mayúsculas),
+        // el Proveedor (Viñeta) se autocompleta como "Leterago".
+        const listaLaboratoriosLeterago = [
+            "Garden House Farmaceutico S.A", "Hidrisage", "Iclos Biotecnologia",
+            "Leches Victus", "Medihealth", "Megalabs", "Panalab", "Poen",
+            "Roemmers", "Rowe"
+        ];
+
+        // Dado un nombre de Laboratorio, determina la viñeta/proveedor que le
+        // corresponde automáticamente: si el propio laboratorio ya es una viñeta
+        // fija, se usa tal cual; si es uno de los laboratorios de Leterago, se
+        // asigna "Leterago"; si no hay coincidencia, devuelve null.
+        function resolverVinetaAutomatica(laboratorio) {
+            laboratorio = (laboratorio || "").toString().trim();
+            if (!laboratorio) return null;
+
+            const comoVinetaFija = listaVinetasFijas.find(v => v.toLowerCase() === laboratorio.toLowerCase());
+            if (comoVinetaFija) return comoVinetaFija;
+
+            const esLabLeterago = listaLaboratoriosLeterago.some(l => l.toLowerCase() === laboratorio.toLowerCase());
+            if (esLabLeterago) return "Leterago";
+
+            return null;
+        }
+
+        // Estados de gestión disponibles para un registro de vencido (además
+        // del estado inicial "Pendiente", que no forma parte de esta lista).
+        // Centralizados aquí para que el select interactivo, el filtro, los
+        // iconos, los colores y los dashboards de riesgo/resumen por FA usen
+        // siempre el mismo catálogo.
+        const ESTADOS_GESTION = [
+            { valor: "Traslado a otra FA", icono: "🔁", color: "#cfe2ff" },
+            { valor: "Enviado a FA Bodega", icono: "📦", color: "#cce5ff" },
+            { valor: "Venta en sucursal", icono: "🛒", color: "#d4edda" },
+            { valor: "Salida irrecuperable", icono: "❌", color: "#f8d7da" },
+            { valor: "Impulsado", icono: "🚀", color: "#e2d0f8" }
+        ];
+
+        function infoEstadoGestion(estado) {
+            return ESTADOS_GESTION.find(e => e.valor === estado) || null;
+        }
+        function iconoEstadoGestion(estado) {
+            if (!estado || estado === 'Pendiente') return '⏳';
+            const info = infoEstadoGestion(estado);
+            return info ? info.icono : '📌';
+        }
+        function colorEstadoGestion(estado) {
+            if (!estado || estado === 'Pendiente') return '#fff3cd';
+            const info = infoEstadoGestion(estado);
+            return info ? info.color : '#f0f0f0';
+        }
+
         function despliegueFechaActual() {
             const hoy = new Date();
             document.getElementById('fecha-actual-header').innerText = hoy.toLocaleDateString('es-HN', {
@@ -777,6 +938,20 @@
             calcularDiagnosticoEnFormulario();
         }
 
+        // Bloquea (o desbloquea) el select de Proveedor (Viñeta) cuando el
+        // Laboratorio del producto pertenece a listaLaboratoriosLeterago: en
+        // ese caso la viñeta queda fija en "Leterago" y no se debe poder
+        // cambiar manualmente desde el formulario.
+        function actualizarBloqueoProveedor(labAsignado) {
+            const selectProv = document.getElementById('prod-prov');
+            if (!selectProv) return;
+            const esLabLeterago = listaLaboratoriosLeterago.some(l => l.toLowerCase() === (labAsignado || "").toString().trim().toLowerCase());
+            selectProv.disabled = esLabLeterago;
+            selectProv.title = esLabLeterago
+                ? 'Este laboratorio se gestiona bajo la viñeta "Leterago" y no puede cambiarse manualmente.'
+                : '';
+        }
+
         function autoAsignarLaboratorioYProveedor(nombreProducto) {
             const prod = (nombreProducto || document.getElementById('prod-name').value).trim();
             let labAsignado = "Sin Politica";
@@ -784,11 +959,9 @@
                 labAsignado = mapaProductosLaboratorios[prod];
             }
             document.getElementById('prod-lab').value = labAsignado;
-            if (listaVinetasFijas.includes(labAsignado)) {
-                actualizarSelectProveedores(labAsignado);
-            } else {
-                actualizarSelectProveedores("Sin Politica");
-            }
+            const vinetaAuto = resolverVinetaAutomatica(labAsignado);
+            actualizarSelectProveedores(vinetaAuto || "Sin Politica");
+            actualizarBloqueoProveedor(labAsignado);
             calcularDiagnosticoEnFormulario();
         }
 
@@ -1069,19 +1242,20 @@
             }
 
             base = base.filter(tieneVentaEnOtraFA);
-            let pendientes = 0, trabajados = 0, enviados = 0, impulsados = 0;
+            let pendientes = 0;
+            const conteoPorEstado = {};
+            ESTADOS_GESTION.forEach(e => conteoPorEstado[e.valor] = 0);
             base.forEach(item => {
                 const g = item.estadoGestion || 'Pendiente';
-                if (g === 'Trabajado') trabajados++;
-                else if (g === 'Enviado') enviados++;
-                else if (g === 'Impulsado') impulsados++;
-                else pendientes++;
+                if (g !== 'Pendiente' && conteoPorEstado.hasOwnProperty(g)) conteoPorEstado[g]++;
+                else if (g === 'Pendiente') pendientes++;
             });
+            const totalTrabajado = Object.values(conteoPorEstado).reduce((a, b) => a + b, 0);
             return {
                 total: base.length,
                 pendientes,
-                totalTrabajado: trabajados + enviados + impulsados,
-                trabajados, enviados, impulsados
+                totalTrabajado,
+                porEstado: conteoPorEstado
             };
         }
 
@@ -1098,7 +1272,7 @@
             document.getElementById('dash-progreso-bar').style.width = pct + '%';
             document.getElementById('dash-progreso-pct').innerText = pct + '%';
             document.getElementById('dash-breakdown').innerText =
-                `✅ ${stats.trabajados} Trabajado · ✈️ ${stats.enviados} Enviado · 🚀 ${stats.impulsados} Impulsado`;
+                ESTADOS_GESTION.map(e => `${e.icono} ${stats.porEstado[e.valor] || 0} ${e.valor}`).join(' · ');
 
             document.querySelectorAll('#dashboard-riesgo-card .stat-box').forEach(box => box.classList.remove('active'));
             if (filtroSoloRiesgoOtraFA) {
@@ -1161,13 +1335,14 @@
             const porFA = {};
             base.forEach(item => {
                 const fa = String(item.sucursal || 'Sin FA').toUpperCase();
-                if (!porFA[fa]) porFA[fa] = { fa, total: 0, pendientes: 0, trabajado: 0, enviado: 0, impulsado: 0 };
+                if (!porFA[fa]) {
+                    porFA[fa] = { fa, total: 0, pendientes: 0, porEstado: {} };
+                    ESTADOS_GESTION.forEach(e => porFA[fa].porEstado[e.valor] = 0);
+                }
                 porFA[fa].total++;
                 const g = item.estadoGestion || 'Pendiente';
-                if (g === 'Trabajado') porFA[fa].trabajado++;
-                else if (g === 'Enviado') porFA[fa].enviado++;
-                else if (g === 'Impulsado') porFA[fa].impulsado++;
-                else porFA[fa].pendientes++;
+                if (g !== 'Pendiente' && porFA[fa].porEstado.hasOwnProperty(g)) porFA[fa].porEstado[g]++;
+                else if (g === 'Pendiente') porFA[fa].pendientes++;
             });
 
             return Object.values(porFA).sort((a, b) => a.fa.localeCompare(b.fa));
@@ -1188,20 +1363,24 @@
             if (!tbody) return;
 
             if (filas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding:12px; text-align:center; color:#888;">Sin registros en riesgo con venta en otras FA para los filtros actuales.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="padding:12px; text-align:center; color:#888;">Sin registros en riesgo con venta en otras FA para los filtros actuales.</td></tr>';
                 return;
             }
 
             const selectSucursal = document.getElementById('filter-sucursal');
             tbody.innerHTML = filas.map(f => {
-                const trabajados = f.trabajado + f.enviado + f.impulsado;
+                const trabajados = Object.values(f.porEstado).reduce((a, b) => a + b, 0);
                 const pct = f.total > 0 ? Math.round((trabajados / f.total) * 100) : 0;
+                const celdasEstados = ESTADOS_GESTION.map(e =>
+                    `<td style="padding:8px; text-align:right;">${(f.porEstado[e.valor] || 0).toLocaleString('es-HN')}</td>`
+                ).join('');
                 return `
                     <tr style="border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="filtrarResumenPorFA('${f.fa}')" title="Ver ${f.fa} en el reporte">
                         <td style="padding:8px; font-weight:bold;">${f.fa}</td>
                         <td style="padding:8px; text-align:right;">${f.total.toLocaleString('es-HN')}</td>
                         <td style="padding:8px; text-align:right; color:#e65100;">${f.pendientes.toLocaleString('es-HN')}</td>
-                        <td style="padding:8px; text-align:right; color: var(--secondary-color);">${trabajados.toLocaleString('es-HN')}</td>
+                        ${celdasEstados}
+                        <td style="padding:8px; text-align:right; color: var(--secondary-color); font-weight:bold;">${trabajados.toLocaleString('es-HN')}</td>
                         <td style="padding:8px;">
                             <div class="dash-progreso-track" style="width:100px; display:inline-block; vertical-align:middle;">
                                 <div class="dash-progreso-fill" style="width:${pct}%;"></div>
@@ -1215,6 +1394,7 @@
         function filtrarResumenPorFA(fa) {
             const selectSucursal = document.getElementById('filter-sucursal');
             if (selectSucursal) selectSucursal.value = fa;
+            cambiarTab('tab-registro');
             actualizarTablaReporte();
         }
 
@@ -1228,6 +1408,7 @@
             filtroSoloRiesgoOtraFA = true;
             document.getElementById('dash-toggle-filtro').checked = true;
             filtroGestionAgrupadoRiesgo = (tipo === 'pendiente' || tipo === 'trabajado') ? tipo : '';
+            cambiarTab('tab-registro');
             actualizarTablaReporte();
         }
 
@@ -1342,9 +1523,10 @@
 
                         let coincidenciaLista = listaVinetasFijas.find(v => v.toLowerCase() === proveedor.toLowerCase());
                         if (coincidenciaLista) {
-                            proveedor = coincidenciaLista; 
+                            proveedor = coincidenciaLista;
                         } else {
-                            proveedor = "Sin Politica";
+                            const vinetaAuto = resolverVinetaAutomatica(laboratorio);
+                            proveedor = vinetaAuto || "Sin Politica";
                         }
 
                         let cantidad = reg['Cant. Vencida'] ? parseInt(reg['Cant. Vencida']) : 0;
@@ -1416,7 +1598,7 @@
 
                     localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
                     actualizarSelectProveedores(document.getElementById('prod-prov').value);
-                    actualizarTablaReporte();
+                    actualizarTablaReporte(true);
 
                     let mensajeStatus = `✓ ¡Éxito! Se inyectaron al reporte ${nuevosRegistrosCargados} filas trabajadas desde el Excel.`;
                     let mensajeAlerta = `¡Carga masiva finalizada con éxito!\nSe añadieron ${nuevosRegistrosCargados} registros analizados según su proveedor/viñeta.`;
@@ -1438,11 +1620,58 @@
             reader.readAsArrayBuffer(file);
         });
 
+        // Un registro solo puede tener su Estado de Gestión modificado si fue
+        // registrado en el mes actual o en el mes inmediatamente anterior.
+        // Los registros más viejos quedan bloqueados (de solo lectura) para
+        // evitar que se sigan "trabajando" casos de meses ya cerrados.
+        // Diferencia en meses "de calendario" entre una fecha de vencimiento
+        // (string 'yyyy-mm-dd') y otra fecha (objeto Date). Ej: Agosto 2026 →
+        // Octubre 2026 = 2. No cuenta días, solo la distancia de mes/año, que
+        // es como las políticas de recuperación definen su ventana ("2 meses").
+        function diferenciaMesesCalendario(fechaVencStr, fechaBase) {
+            if (!fechaVencStr) return null;
+            const partes = String(fechaVencStr).trim().split('-');
+            if (partes.length !== 3) return null;
+            const anioVenc = parseInt(partes[0]), mesVenc = parseInt(partes[1]);
+            if (isNaN(anioVenc) || isNaN(mesVenc)) return null;
+            const anioBase = fechaBase.getFullYear(), mesBase = fechaBase.getMonth() + 1;
+            return (anioVenc - anioBase) * 12 + (mesVenc - mesBase);
+        }
+
+        function esRegistroDelMesGestionable(item) {
+            if (!item || !item.fechaRegistro) return true; // sin fecha reconocible, no se bloquea por precaución
+
+            const txt = String(item.fechaRegistro).trim();
+            let fecha = null;
+            if (txt.includes('/')) {
+                const p = txt.split('/');
+                if (p.length === 3) fecha = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
+            } else if (txt.includes('-')) {
+                const p = txt.split('-');
+                if (p.length === 3) fecha = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
+            }
+            if (!fecha || isNaN(fecha)) return true; // fecha no interpretable, no se bloquea por precaución
+
+            const hoy = new Date();
+            const mesActual = hoy.getMonth();
+            const anioActual = hoy.getFullYear();
+
+            let mesPrevio = mesActual - 1;
+            let anioPrevio = anioActual;
+            if (mesPrevio < 0) { mesPrevio = 11; anioPrevio = anioActual - 1; }
+
+            const esMesActual = fecha.getFullYear() === anioActual && fecha.getMonth() === mesActual;
+            const esMesAnterior = fecha.getFullYear() === anioPrevio && fecha.getMonth() === mesPrevio;
+
+            return esMesActual || esMesAnterior;
+        }
+
         async function actualizarEstadoGestionInteractiva(id, nuevoEstado) {
             const index = globalVencidos.findIndex(item => item.id == id);
             if (index === -1) return;
 
-            const estadoActual = globalVencidos[index].estadoGestion || "Pendiente";
+            const item = globalVencidos[index];
+            const estadoActual = item.estadoGestion || "Pendiente";
 
             if (estadoActual !== "Pendiente") {
                 alert("⚠️ El Estado de Gestión ya fue definido (" + estadoActual + ") y no puede modificarse.");
@@ -1450,7 +1679,13 @@
                 return;
             }
 
-            globalVencidos[index].estadoGestion = nuevoEstado;
+            if (!esRegistroDelMesGestionable(item)) {
+                alert("🔒 Este registro es de un mes anterior al permitido. Solo se puede gestionar el mes actual y el mes inmediato anterior.");
+                actualizarTablaReporte();
+                return;
+            }
+
+            item.estadoGestion = nuevoEstado;
             localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
 
             await enviarActualizacionEstadoGestion(id, nuevoEstado);
@@ -1619,7 +1854,7 @@
                                 item.estadoRecuperacion = evaluarEstadoRecuperacion(item.proveedor, item.laboratorio);
                             });
 
-                            actualizarTablaReporte();
+                            actualizarTablaReporte(true);
                             actualizarDatalistEnPantalla();
                             actualizarSelectProveedores();
                             actualizarTablaUsuarios();
@@ -1650,6 +1885,24 @@
             item.estadoRecuperacion = evaluarEstadoRecuperacion(item.proveedor, item.laboratorio);
         });
 
+        // Sistema de pestañas del panel principal. Cada botón/contenido tiene
+        // el mismo sufijo ('tab-registro', 'tab-carga', 'tab-resumen'); esta
+        // función simplemente activa el par correspondiente y desactiva el resto.
+        function cambiarTab(idTab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+            const contenido = document.getElementById(idTab);
+            if (contenido) contenido.classList.add('active');
+
+            const boton = document.getElementById('tab-btn-' + idTab.replace('tab-', ''));
+            if (boton) boton.classList.add('active');
+
+            // El Resumen por FA solo se recalcula cuando el usuario realmente
+            // entra a esa pestaña, para no gastar ciclos en cada login/filtro.
+            if (idTab === 'tab-resumen') actualizarResumenPorFA();
+        }
+
         async function login() {
             const userIn = document.getElementById('login-user').value.trim();
             const passIn = document.getElementById('login-pass').value;
@@ -1675,6 +1928,16 @@
                 document.getElementById('current-user-display').innerText = cuenta.usuario;
                 document.getElementById('current-role-display').innerText = cuenta.rol;
 
+                // Pestaña "Carga de Archivos": solo Admin y Super Usuario administran
+                // cargas masivas, catálogo, backups y usuarios.
+                document.getElementById('tab-btn-carga').style.display = esAdminOSuperior(cuenta) ? 'inline-block' : 'none';
+                // Pestaña "Resumen por FA": exclusiva de Super Usuario, igual que la
+                // tarjeta que contiene (comparar todas las sucursales entre sí).
+                document.getElementById('tab-btn-resumen').style.display = esSuperUsuario(cuenta) ? 'inline-block' : 'none';
+                // Toda sesión nueva arranca en la pestaña de Registro y Listado,
+                // que es la vista de trabajo diario para cualquier rol.
+                cambiarTab('tab-registro');
+
                 if (esAdminOSuperior(cuenta)) {
                     document.getElementById('admin-panel').style.display = 'block';
                     document.getElementById('admin-export-section').style.display = 'block';
@@ -1687,6 +1950,13 @@
                     document.getElementById('admin-filters-container').style.display = 'none';
                     document.getElementById('tip-modal-msg').style.display = 'none';
                 }
+
+                // El listado de usuarios (con sus roles y FA asignadas) solo lo
+                // puede ver un Super Usuario. Un Admin normal puede seguir
+                // creando cuentas nuevas desde el formulario de arriba, pero
+                // no puede ver ni administrar las cuentas ya existentes.
+                document.getElementById('lista-usuarios-container').style.display = esSuperUsuario(cuenta) ? 'block' : 'none';
+                document.getElementById('lista-usuarios-restringido-msg').style.display = (esAdminOSuperior(cuenta) && !esSuperUsuario(cuenta)) ? 'block' : 'none';
 
                 // La Carga Masiva de Próximos a Vencer la puede usar cualquier Admin+,
                 // pero solo el Super Usuario puede incluir registros de meses anteriores
@@ -1718,7 +1988,7 @@
                 }
 
                 actualizarSelectProveedores();
-                actualizarTablaReporte();
+                actualizarTablaReporte(true);
 
                 cargarDesdeSheets();
             } else {
@@ -1789,9 +2059,10 @@
 
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
                 actualizarSelectProveedores();
-                actualizarTablaReporte();
+                actualizarTablaReporte(true);
                 document.getElementById('vencidos-form').reset();
                 document.getElementById('form-diagnostico-container').style.display = 'none';
+                actualizarBloqueoProveedor('');
 
                 enviarASheets(nuevoRegistro);
             } catch (error) {
@@ -1838,7 +2109,25 @@
             selectMesReg.value = valorMesRegPrevio;
         }
 
-        function actualizarTablaReporte() {
+        function toggleRecuperablesSalientes() {
+            filtroRecuperablesSalientes = !filtroRecuperablesSalientes;
+            const btn = document.getElementById('btn-recuperables-salientes');
+            if (btn) {
+                btn.classList.toggle('activo', filtroRecuperablesSalientes);
+                btn.innerHTML = filtroRecuperablesSalientes
+                    ? '🟢 Recuperables Salientes (Activo) ✕'
+                    : '🟢 Recuperables Salientes';
+            }
+            actualizarTablaReporte();
+        }
+
+        // recalcularOpciones=true SOLO cuando cambió el conjunto de datos
+        // (login, sincronizar, carga masiva, alta/baja de registro, restore).
+        // En cambios de filtro/búsqueda/estado de un solo item no hace falta
+        // reconstruir los <select> de Sucursal/Mes Venc./Mes Reg., porque esas
+        // opciones dependen del set completo de datos, no de qué filtro está
+        // activo. Esto evita un recorrido completo extra en cada tecla o clic.
+        function actualizarTablaReporte(recalcularOpciones = false) {
             let listaVisualizacion = obtenerVencidosVisibles();
             if (usuarioActual && esAdminOSuperior(usuarioActual)) {
                 listaVisualizacion = filtrarLista(listaVisualizacion);
@@ -1854,6 +2143,25 @@
                 listaVisualizacion = listaVisualizacion.filter(item => (item.estadoGestion || 'Pendiente') !== 'Pendiente');
             }
 
+            // "Recuperables Salientes": el producto es Recuperable según la política
+            // (Viñeta+Laboratorio) Y su vencimiento cae dentro de la ventana de
+            // anticipación que esa misma política define (el número de "meses"
+            // extraído de sus Observaciones, ej. "2 meses" = se vuelve accionable
+            // desde 2 meses antes de vencer). Ej: hoy Agosto, vence Octubre = 2
+            // meses de diferencia; si la política dice "2 meses", sí cuenta.
+            if (filtroRecuperablesSalientes) {
+                const hoy = new Date();
+                listaVisualizacion = listaVisualizacion.filter(item => {
+                    const rec = evaluarEstadoRecuperacion(item.proveedor || '', item.laboratorio || '');
+                    if (rec !== 'Recuperable') return false;
+                    const politica = obtenerPolitica(item.proveedor || '', item.laboratorio || '');
+                    if (!politica) return false;
+                    const diff = diferenciaMesesCalendario(item.fecha, hoy);
+                    if (diff === null) return false;
+                    return diff >= 0 && diff <= politica.meses;
+                });
+            }
+
             // Buscador de producto (aplica a cualquier rol)
             const inputBusqueda = document.getElementById('buscador-producto');
             const textoBusqueda = inputBusqueda ? inputBusqueda.value.trim().toLowerCase() : '';
@@ -1864,17 +2172,31 @@
             }
 
             actualizarDashboardRiesgo();
-            poblarSelectoresFiltros();
+            // Los <select> de Sucursal/Mes Venc./Mes Reg. dependen del conjunto
+            // completo de datos, no del filtro activo: solo se reconstruyen
+            // cuando el llamador avisa que los datos cambiaron.
+            if (recalcularOpciones) poblarSelectoresFiltros();
+
             const tbody = document.querySelector('#reporte-table tbody');
-            tbody.innerHTML = '';
             listaVisualizacion.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+            const esSuper = esSuperUsuario(usuarioActual);
+            const esAdminSup = esAdminOSuperior(usuarioActual);
+
+            // Construimos todas las filas como un único string y las inyectamos
+            // de una sola vez con innerHTML. Antes cada fila se creaba con
+            // document.createElement + tbody.appendChild dentro del forEach,
+            // lo que fuerza un reflow del navegador por cada registro; con
+            // reportes de cientos/miles de filas eso es lo que provocaba el
+            // "congelamiento" al ingresar y al sincronizar. Un solo innerHTML
+            // al final es muchísimo más rápido.
+            const filasHTML = [];
 
             listaVisualizacion.forEach(item => {
               try {
-                const tr = document.createElement('tr');
-                let celdaAcciones = esSuperUsuario(usuarioActual) ? `<td><button class="btn-delete-item" onclick='eliminarRegistroVencido(${item.id})'>Eliminar</button></td>` : '';
+                let celdaAcciones = esSuper ? `<td><button class="btn-delete-item" onclick='eliminarRegistroVencido(${item.id})'>Eliminar</button></td>` : '';
                 const productoEscapado = String(item.producto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                let productoHTML = esAdminOSuperior(usuarioActual) ? `<strong class="clickable-product" onclick="verTop10Ventas('${productoEscapado}')">${item.producto}</strong>` : `<strong>${item.producto}</strong>`;
+                let productoHTML = esAdminSup ? `<strong class="clickable-product" onclick="verTop10Ventas('${productoEscapado}')">${item.producto}</strong>` : `<strong>${item.producto}</strong>`;
 
                 let ventaHistoricaSucursal = 0;
                 if (mapaTop10Ventas[item.producto]) {
@@ -1891,32 +2213,36 @@
                 let badgeEstadoClase = estRec === "Recuperable" ? "badge-recuperable" : "badge-irrecuperable";
 
                 let actualGestion = item.estadoGestion || "Pendiente";
-                let colorFondoSelect = "#fff3cd"; 
-                if (actualGestion === "Trabajado") colorFondoSelect = "#d4edda";
-                if (actualGestion === "Enviado") colorFondoSelect = "#cce5ff";
-                if (actualGestion === "Impulsado") colorFondoSelect = "#e2d0f8";
-
-                const iconosGestion = { Pendiente: '⏳', Trabajado: '✅', Enviado: '✈️', Impulsado: '🚀' };
+                let colorFondoSelect = colorEstadoGestion(actualGestion);
 
                 let selectorGestionHTML;
-                if (actualGestion === 'Pendiente') {
+                const editablePorMes = esRegistroDelMesGestionable(item);
+                if (actualGestion === 'Pendiente' && editablePorMes) {
+                    const opcionesGestion = ESTADOS_GESTION.map(e =>
+                        `<option value="${e.valor}">${e.icono} ${e.valor}</option>`
+                    ).join('');
                     selectorGestionHTML = `
                         <select class="select-interactivo" style="background-color: ${colorFondoSelect};" onchange="actualizarEstadoGestionInteractiva(${item.id}, this.value); actualizarTablaReporte();">
                             <option value="Pendiente" selected>⏳ Pendiente</option>
-                            <option value="Trabajado">✅ Trabajado</option>
-                            <option value="Enviado">✈️ Enviado</option>
-                            <option value="Impulsado">🚀 Impulsado</option>
+                            ${opcionesGestion}
                         </select>
+                    `;
+                } else if (actualGestion === 'Pendiente' && !editablePorMes) {
+                    selectorGestionHTML = `
+                        <span class="badge" style="background-color: #f8d7da; color:#842029; cursor: not-allowed;" title="Este registro es de un mes anterior al permitido. Solo se puede gestionar el mes actual y el mes inmediato anterior.">
+                            🔒 Bloqueado (mes anterior)
+                        </span>
                     `;
                 } else {
                     selectorGestionHTML = `
                         <span class="badge" style="background-color: ${colorFondoSelect}; cursor: not-allowed;" title="El Estado de Gestión ya fue definido y no puede modificarse">
-                            ${iconosGestion[actualGestion] || ''} ${actualGestion} 🔒
+                            ${iconoEstadoGestion(actualGestion)} ${actualGestion} 🔒
                         </span>
                     `;
                 }
 
-                tr.innerHTML = `
+                filasHTML.push(`
+                <tr>
                     <td><span class="badge badge-sucursal">${item.sucursal}</span></td>
                     <td>${productoHTML}</td>
                     <td><span class="badge" style="background-color: #eaf2f8; color: #2980b9; border: 1px solid #a9cce3; font-weight:bold;">${laboratorioDisplay}</span></td>
@@ -1931,12 +2257,13 @@
                     <td><span class="badge" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;">👤 ${item.usuario}</span></td>
                     <td><span class="badge" style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9;">📅 ${item.fechaRegistro}</span></td>
                     ${celdaAcciones}
-                `;
-                tbody.appendChild(tr);
+                </tr>`);
               } catch (error) {
                 console.error("No se pudo mostrar un registro (datos corruptos):", item, error);
               }
             });
+
+            tbody.innerHTML = filasHTML.join('');
         }
 
         function verTop10Ventas(nombreProducto) {
@@ -1971,7 +2298,7 @@
             if (confirm("¿Eliminar este producto?")) {
                 globalVencidos = globalVencidos.filter(item => item.id !== id);
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
-                actualizarTablaReporte();
+                actualizarTablaReporte(true);
 
                 enviarEliminacionASheets(id);
             }
@@ -2077,6 +2404,87 @@
 
             await enviarAccionUsuarioASheets({ action: "actualizarRolUsuario", usuario: usuario.usuario, rol: nuevoRol, solicitante: usuarioActual ? usuarioActual.usuario : "" });
             actualizarTablaReporte();
+        }
+
+        // Controla la visibilidad de la tabla de usuarios registrados: viene
+        // oculta por defecto para no exponer la lista de cuentas/roles/FA
+        // apenas se entra al panel; el admin la despliega solo si la necesita.
+        function toggleTablaUsuarios() {
+            const wrapper = document.getElementById('users-table-wrapper');
+            const boton = document.getElementById('btn-toggle-usuarios');
+            const oculta = wrapper.style.display === 'none';
+            wrapper.style.display = oculta ? 'block' : 'none';
+            boton.innerText = oculta ? '🙈 Ocultar Usuarios' : '👁️ Mostrar Usuarios';
+        }
+
+        // Cambio de contraseña de la propia cuenta: disponible para cualquier
+        // usuario logueado (User, Admin o Super Usuario), a diferencia de
+        // cambiarClaveUsuario() que es exclusiva del panel de administración
+        // para restablecer la clave de OTRO usuario.
+        async function cambiarMiContrasena() {
+            if (!usuarioActual) return;
+
+            const { value: actual } = await Swal.fire({
+                title: 'Cambiar mi contraseña',
+                input: 'password',
+                inputLabel: 'Contraseña actual',
+                inputPlaceholder: 'Ingresa tu contraseña actual',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (v) => !v ? 'Este campo es obligatorio' : undefined
+            });
+            if (actual === undefined) return; // Canceló
+
+            if (String(actual) !== String(usuarioActual.contrasena)) {
+                Swal.fire('Error', 'La contraseña actual no es correcta.', 'error');
+                return;
+            }
+
+            const { value: nueva } = await Swal.fire({
+                title: 'Nueva contraseña',
+                input: 'password',
+                inputLabel: 'Escribe tu nueva contraseña',
+                inputPlaceholder: 'Nueva contraseña',
+                showCancelButton: true,
+                confirmButtonText: 'Continuar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (v) => !v || v.trim() === '' ? 'Este campo es obligatorio' : undefined
+            });
+            if (nueva === undefined) return;
+
+            const { value: confirmacion } = await Swal.fire({
+                title: 'Confirma tu nueva contraseña',
+                input: 'password',
+                inputLabel: 'Repite la nueva contraseña',
+                inputPlaceholder: 'Confirmar contraseña',
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                cancelButtonText: 'Cancelar',
+                inputValidator: (v) => !v || v.trim() === '' ? 'Este campo es obligatorio' : undefined
+            });
+            if (confirmacion === undefined) return;
+
+            if (nueva.trim() !== confirmacion.trim()) {
+                Swal.fire('Error', 'Las contraseñas no coinciden. Intenta de nuevo.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Guardando...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            await enviarAccionUsuarioASheets({ action: "actualizarClaveUsuario", usuario: usuarioActual.usuario, contrasena: nueva.trim() });
+
+            // Refleja el cambio también en la sesión actual, ya que
+            // enviarAccionUsuarioASheets recarga usuariosCache desde Sheets.
+            const actualizado = usuariosCache.find(u => u.usuario.toLowerCase() === usuarioActual.usuario.toLowerCase());
+            if (actualizado) usuarioActual = actualizado;
+
+            Swal.fire('Listo', 'Tu contraseña se actualizó correctamente.', 'success');
         }
 
         async function cambiarClaveUsuario(index) {
@@ -2200,7 +2608,7 @@
 
                 globalVencidos = [...registrosSheet, ...pendientesLocales];
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
-                actualizarTablaReporte();
+                actualizarTablaReporte(true);
             } catch (error) {
                 console.error("No se pudo sincronizar con Google Sheets:", error);
             }
@@ -2251,7 +2659,7 @@
                 // Reemplazo total: lo que esté en el Sheet es la única fuente de verdad.
                 globalVencidos = registrosSheet;
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
-                actualizarTablaReporte();
+                actualizarTablaReporte(true);
 
                 Swal.fire('Sincronizado', `Se cargaron ${registrosSheet.length} registro(s) desde Google Sheets.`, 'success');
             } catch (error) {
