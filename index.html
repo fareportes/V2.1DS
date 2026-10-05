@@ -261,6 +261,25 @@
         .badge-recuperable { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .badge-irrecuperable { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
+        .badge-prioridad-alta { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .badge-prioridad-media { background-color: #fff3cd; color: #856404; border: 1px solid #ffe69c; }
+        .badge-prioridad-baja { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .badge-prioridad-na { background-color: #f1f3f5; color: #adb5bd; border: 1px solid #dee2e6; }
+
+        /* ---- Botones de filtro por Prioridad de Irrecuperables a trabajar ---- */
+        .prioridad-filtros { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .btn-prioridad { flex: 1; min-width: 100px; margin-bottom: 0; }
+        .btn-prioridad.alta { border-color: #dc3545; background-color: #fdecea; color: #721c24; }
+        .btn-prioridad.alta:hover { background-color: #f8d7da; }
+        .btn-prioridad.alta.activo { background-color: #dc3545; color: #fff; border-color: #b02a37; }
+        .btn-prioridad.media { border-color: #ffc107; background-color: #fff8e1; color: #856404; }
+        .btn-prioridad.media:hover { background-color: #ffecb3; }
+        .btn-prioridad.media.activo { background-color: #ffc107; color: #3f2f00; border-color: #d39e00; }
+        .btn-prioridad.baja { border-color: #28a745; background-color: #eafbf0; color: #1b5e20; }
+        .btn-prioridad.baja:hover { background-color: #d7f5e0; }
+        .btn-prioridad.baja.activo { background-color: #28a745; color: #fff; border-color: #1e7e34; }
+        #prioridad-conteo { font-size: 0.85em; color: #555; margin: -8px 0 15px 0; }
+
         .clickable-product {
             color: #0056b3;
             cursor: pointer;
@@ -539,9 +558,30 @@
                             </div>
                         </div>
 
-                        <button type="button" id="btn-recuperables-salientes" class="pleca-toggle" onclick="toggleRecuperablesSalientes()" title="Muestra productos Recuperables cuyo vencimiento cae dentro de la ventana de anticipación definida por su política (ej: si la política dice '2 meses', se activa desde 2 meses antes de vencer)">
+                        <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" id="chk-mostrar-meses-anteriores" onchange="toggleMostrarMesesAnteriores()" style="width: auto; margin: 0;">
+                            <label for="chk-mostrar-meses-anteriores" style="margin: 0; font-size: 0.9em; font-weight: 600; cursor: pointer;">
+                                🗓️ Mostrar registros de meses anteriores <span style="font-weight: normal; color: #6c757d;">(por defecto solo se ven el mes actual y el anterior; elegir un mes puntual en "Mes Venc." también lo muestra sin marcar esto)</span>
+                            </label>
+                        </div>
+
+                        <button type="button" id="btn-recuperables-salientes" class="pleca-toggle" onclick="toggleRecuperablesSalientes()" title="Muestra productos Recuperables que están en el mes límite para enviarse según su política (ej: política de 5 meses = se envían cuando faltan 5 meses para vencer). Los que ya tienen menos meses que el plazo ya no se pueden enviar y se excluyen."">
                             🟢 Recuperables Salientes
                         </button>
+                        <div id="aviso-recuperables-fuera-plazo" style="display:none; margin-top:8px; padding:8px 12px; background:#fff3cd; color:#856404; border:1px solid #ffe69c; border-radius:6px; font-size:0.88em;"></div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.9em;">🎯 Prioridad de Irrecuperables a trabajar:</label>
+                            <div class="prioridad-filtros">
+                                <button type="button" id="btn-prioridad-alta" class="pleca-toggle btn-prioridad alta" onclick="toggleFiltroPrioridad('Alta')" title="La venta en su propia sucursal no llega al 400% de la cantidad que se vence (ej. vence 1 y vende 3 o menos): se pierde si no se actúa.">
+                                    🔴 Alta
+                                </button>
+                                <button type="button" id="btn-prioridad-baja" class="pleca-toggle btn-prioridad baja" onclick="toggleFiltroPrioridad('Baja')" title="La venta en su propia sucursal llega al 400% o más de la cantidad que se está venciendo (ej. vence 1 y vende 4).">
+                                    🟢 Baja
+                                </button>
+                            </div>
+                            <div id="prioridad-conteo"></div>
+                        </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label for="buscador-producto" style="font-size: 0.9em;">🔍 Buscar producto:</label>
@@ -586,6 +626,7 @@
                                         <option value="Venta en sucursal">Venta en sucursal</option>
                                         <option value="Salida irrecuperable">Salida irrecuperable</option>
                                         <option value="Impulsado">Impulsado</option>
+                                        <option value="Cobrado a empleado">Cobrado a empleado</option>
                                     </select>
                                 </div>
                             </div>
@@ -604,10 +645,11 @@
                                         <th>Cant. Vencida</th>
                                         <th>Estado Política</th>
                                         <th>Venta Sucursal</th>
+                                        <th>Prioridad</th>
                                         <th>Estado Gestión (Interactiva)</th>
                                         <th>Mes Venc.</th>
                                         <th>Año Venc.</th>
-                                        <th>Fecha Venc.</th>
+                                        <th>Mes Registro</th>
                                         <th>Registrado Por</th>
                                         <th>Registrado El</th>
                                         <th id="th-acciones-reporte" style="display: none;">Acciones</th>
@@ -731,6 +773,7 @@
                                     <th style="padding:8px; text-align:right;">🛒 Venta Suc.</th>
                                     <th style="padding:8px; text-align:right;">❌ Irrecuperable</th>
                                     <th style="padding:8px; text-align:right;">🚀 Impulsado</th>
+                                    <th style="padding:8px; text-align:right;">💵 Cobrado Emp.</th>
                                     <th style="padding:8px; text-align:right;">✅ Total Gestionado</th>
                                     <th style="padding:8px;">Avance</th>
                                 </tr>
@@ -759,6 +802,19 @@
         let filtroSoloRiesgoOtraFA = false;
         let filtroGestionAgrupadoRiesgo = ''; // '' | 'pendiente' | 'trabajado'
         let filtroRecuperablesSalientes = false; // true = solo Recuperables dentro de la ventana de meses de su política
+        let filtroPrioridadActivo = ''; // '' | 'Alta' | 'Baja'
+        let mostrarMesesAnteriores = false; // true = no ocultar registros de 2+ meses de vencimiento atrás
+
+        // ── PRIORIZACIÓN DE IRRECUPERABLES A TRABAJAR ──
+        // Solo hay dos niveles: Alta y Baja.
+        // Se compara la venta del producto en SU PROPIA sucursal (reporte de
+        // ventas, ~3 meses) contra la cantidad que se está venciendo:
+        //   Baja: la venta llega al 400% (4×) de la cantidad a vencer o más.
+        //   Alta: todo lo demás (incluye sin venta).
+        // Ej: vence 1 → vende 4 o más = Baja; vende 3 o menos = Alta.
+        //     vence 4 → vende 16 o más = Baja; vende 15 o menos = Alta.
+        // Factor 4 = 400%. Se puede ajustar aquí si cambia el criterio.
+        const PRIORIDAD_FACTOR_VENTA_VS_VENCIMIENTO = 4;
 
         // ── MÓDULO DE INDEXEDDB PARA CACHÉ MASIVA DE VENTAS (+240k registros) ──
         const DB_NAME = "ControlVencidosDB";
@@ -835,8 +891,13 @@
             "Inpomo", "Inv&ProdVarios", "Karnel", "Lagomac", "Lancasco", "LeClinique",
             "Leterago", "Medilab", "Medwell", "Mefasa", "MSN",
             "NutriTech", "Pharmaetica", "Pisa", "Proconsumo", "Proconsumo VE",
-            "Siman", "Unipharm"
+            "Siman", "Siman viñeta (Rojo)", "Siman viñeta (Blanco, Naranja)", "Unipharm"
         ];
+
+        // Viñetas que, sin importar la política Viñeta+Laboratorio cargada ni
+        // el laboratorio del producto, SIEMPRE se consideran Irrecuperables
+        // (no tienen ninguna ruta de recuperación posible).
+        const listaVinetasSiempreIrrecuperables = ["Siman viñeta (Rojo)"];
 
         // Laboratorios que, aunque no tengan una viñeta propia en listaVinetasFijas,
         // se manejan comercialmente bajo la viñeta "Leterago". Cuando el Laboratorio
@@ -875,7 +936,8 @@
             { valor: "Enviado a FA Bodega", icono: "📦", color: "#cce5ff" },
             { valor: "Venta en sucursal", icono: "🛒", color: "#d4edda" },
             { valor: "Salida irrecuperable", icono: "❌", color: "#f8d7da" },
-            { valor: "Impulsado", icono: "🚀", color: "#e2d0f8" }
+            { valor: "Impulsado", icono: "🚀", color: "#e2d0f8" },
+            { valor: "Cobrado a empleado", icono: "💵", color: "#ffe5d0" }
         ];
 
         function infoEstadoGestion(estado) {
@@ -1113,6 +1175,13 @@
         function evaluarEstadoRecuperacion(proveedor, laboratorio) {
             proveedor = proveedor != null ? String(proveedor) : "";
             laboratorio = laboratorio != null ? String(laboratorio) : "";
+
+            // Regla dura: estas viñetas son irrecuperables siempre, sin
+            // importar si hay o no política Viñeta+Laboratorio cargada.
+            if (listaVinetasSiempreIrrecuperables.some(v => v.toLowerCase() === proveedor.toLowerCase())) {
+                return "Irrecuperable";
+            }
+
             if (!proveedor || proveedor === "" || proveedor === "Sin Politica") {
                 return "Irrecuperable";
             }
@@ -1126,9 +1195,76 @@
             return listaVinetasFijas.includes(proveedor) ? "Recuperable" : "Irrecuperable";
         }
 
+        // Venta del producto en SU PROPIA sucursal, según el reporte masivo
+        // de ventas cargado (mapaTop10Ventas). 0 si nunca se vendió ahí o si
+        // no hay datos de ventas cargados.
+        function obtenerVentaEnSucursal(item) {
+            const registros = mapaTop10Ventas[item.producto];
+            if (!registros || !registros.length) return 0;
+            const recordSuc = registros.find(f => String(f.sucursal).toUpperCase() === String(item.sucursal || '').toUpperCase());
+            return recordSuc ? (Number(recordSuc.quantity) || 0) : 0;
+        }
+
+        // Días de calendario que faltan para la fecha de vencimiento (string
+        // 'yyyy-mm-dd'). Negativo si ya venció. null si la fecha no es
+        // interpretable.
+        function diasHastaVencimiento(fechaVencStr) {
+            if (!fechaVencStr) return null;
+            const partes = String(fechaVencStr).trim().split('-');
+            if (partes.length !== 3) return null;
+            const anio = parseInt(partes[0]), mes = parseInt(partes[1]), dia = parseInt(partes[2]);
+            if (isNaN(anio) || isNaN(mes) || isNaN(dia)) return null;
+            const fechaVenc = new Date(anio, mes - 1, dia);
+            if (isNaN(fechaVenc)) return null;
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            fechaVenc.setHours(0, 0, 0, 0);
+            return Math.round((fechaVenc - hoy) / (1000 * 60 * 60 * 24));
+        }
+
+        // Prioridad de trabajo (Alta/Baja) de un registro IRRECUPERABLE:
+        // compara cuánto se vende ese producto en su propia sucursal (~3
+        // meses, según el reporte de ventas cargado) frente a la cantidad que
+        // se está venciendo. Solo aplica a Irrecuperables: los Recuperables ya
+        // tienen su propia ruta de traslado/recuperación vía política y
+        // devuelven null (no se priorizan con este criterio).
+        //   Baja: la venta es al menos 400% (4×) la cantidad a vencer.
+        //   Alta: la venta no llega a ese 400% (incluye sin venta).
+        // La fecha de vencimiento no modifica la prioridad.
+        function calcularPrioridadTrabajo(item, ventaEnSucursal) {
+            const estadoRec = evaluarEstadoRecuperacion(item.proveedor || '', item.laboratorio || '');
+            if (estadoRec !== 'Irrecuperable') return null;
+
+            const venta = Number(ventaEnSucursal) || 0;
+            const cantidadVencida = Number(item.cantidad) || 0;
+
+            if (cantidadVencida <= 0 || venta < cantidadVencida * PRIORIDAD_FACTOR_VENTA_VS_VENCIMIENTO) {
+                return 'Alta';
+            }
+            return 'Baja';
+        }
+
+        function infoPrioridad(prioridad) {
+            switch (prioridad) {
+                case 'Alta': return { icono: '🔴', clase: 'badge-prioridad-alta' };
+                case 'Baja': return { icono: '🟢', clase: 'badge-prioridad-baja' };
+                default: return { icono: '➖', clase: 'badge-prioridad-na' };
+            }
+        }
+
+        function toggleFiltroPrioridad(nivel) {
+            filtroPrioridadActivo = (filtroPrioridadActivo === nivel) ? '' : nivel;
+            ['alta', 'baja'].forEach(n => {
+                const btn = document.getElementById('btn-prioridad-' + n);
+                if (btn) btn.classList.toggle('activo', filtroPrioridadActivo.toLowerCase() === n);
+            });
+            actualizarTablaReporte();
+        }
+
         function obtenerPolitica(proveedor, laboratorio) {
             proveedor = proveedor != null ? String(proveedor) : "";
             laboratorio = laboratorio != null ? String(laboratorio) : "";
+            if (listaVinetasSiempreIrrecuperables.some(v => v.toLowerCase() === proveedor.toLowerCase())) return null;
             if (!proveedor || !laboratorio || Object.keys(maestroPoliticas).length === 0) return null;
             let clave = proveedor.toLowerCase() + "||" + laboratorio.toLowerCase();
             return maestroPoliticas[clave] || null;
@@ -1363,7 +1499,7 @@
             if (!tbody) return;
 
             if (filas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="padding:12px; text-align:center; color:#888;">Sin registros en riesgo con venta en otras FA para los filtros actuales.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="padding:12px; text-align:center; color:#888;">Sin registros en riesgo con venta en otras FA para los filtros actuales.</td></tr>';
                 return;
             }
 
@@ -1620,10 +1756,6 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // Un registro solo puede tener su Estado de Gestión modificado si fue
-        // registrado en el mes actual o en el mes inmediatamente anterior.
-        // Los registros más viejos quedan bloqueados (de solo lectura) para
-        // evitar que se sigan "trabajando" casos de meses ya cerrados.
         // Diferencia en meses "de calendario" entre una fecha de vencimiento
         // (string 'yyyy-mm-dd') y otra fecha (objeto Date). Ej: Agosto 2026 →
         // Octubre 2026 = 2. No cuenta días, solo la distancia de mes/año, que
@@ -1638,32 +1770,21 @@
             return (anioVenc - anioBase) * 12 + (mesVenc - mesBase);
         }
 
-        function esRegistroDelMesGestionable(item) {
-            if (!item || !item.fechaRegistro) return true; // sin fecha reconocible, no se bloquea por precaución
-
-            const txt = String(item.fechaRegistro).trim();
-            let fecha = null;
-            if (txt.includes('/')) {
-                const p = txt.split('/');
-                if (p.length === 3) fecha = new Date(parseInt(p[2]), parseInt(p[1]) - 1, parseInt(p[0]));
-            } else if (txt.includes('-')) {
-                const p = txt.split('-');
-                if (p.length === 3) fecha = new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2]));
-            }
-            if (!fecha || isNaN(fecha)) return true; // fecha no interpretable, no se bloquea por precaución
-
-            const hoy = new Date();
-            const mesActual = hoy.getMonth();
-            const anioActual = hoy.getFullYear();
-
-            let mesPrevio = mesActual - 1;
-            let anioPrevio = anioActual;
-            if (mesPrevio < 0) { mesPrevio = 11; anioPrevio = anioActual - 1; }
-
-            const esMesActual = fecha.getFullYear() === anioActual && fecha.getMonth() === mesActual;
-            const esMesAnterior = fecha.getFullYear() === anioPrevio && fecha.getMonth() === mesPrevio;
-
-            return esMesActual || esMesAnterior;
+        // Plazo de envío según la política de un Recuperable. La política
+        // exige enviar el producto N meses ANTES de su vencimiento: si ya
+        // le quedan menos de N meses, el plazo se perdió y ya no se puede
+        // enviar. Devuelve null si el registro no es Recuperable o no hay
+        // política/fecha interpretable.
+        //   { meses: N de la política, restantes: meses que le quedan,
+        //     fueraDePlazo: true si restantes < N }
+        function estadoPlazoPolitica(item) {
+            const rec = evaluarEstadoRecuperacion(item.proveedor || '', item.laboratorio || '');
+            if (rec !== 'Recuperable') return null;
+            const politica = obtenerPolitica(item.proveedor || '', item.laboratorio || '');
+            if (!politica) return null;
+            const restantes = diferenciaMesesCalendario(item.fecha, new Date());
+            if (restantes === null) return null;
+            return { meses: politica.meses, restantes: restantes, fueraDePlazo: restantes < politica.meses };
         }
 
         async function actualizarEstadoGestionInteractiva(id, nuevoEstado) {
@@ -1675,12 +1796,6 @@
 
             if (estadoActual !== "Pendiente") {
                 alert("⚠️ El Estado de Gestión ya fue definido (" + estadoActual + ") y no puede modificarse.");
-                actualizarTablaReporte();
-                return;
-            }
-
-            if (!esRegistroDelMesGestionable(item)) {
-                alert("🔒 Este registro es de un mes anterior al permitido. Solo se puede gestionar el mes actual y el mes inmediato anterior.");
                 actualizarTablaReporte();
                 return;
             }
@@ -2071,6 +2186,22 @@
             }
         }
 
+        // Nombres de mes tal cual los genera toLocaleString('es-HN', {month:'long'})
+        // capitalizados (ver carga masiva y guardarProducto), usados para
+        // ordenar los <select> de "Mes Venc." y "Mes Reg." en orden de
+        // calendario (Enero → Diciembre) en vez de orden alfabético.
+        const ORDEN_MESES_CALENDARIO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        function ordenarMesesCalendario(meses) {
+            return meses.sort((a, b) => {
+                const ia = ORDEN_MESES_CALENDARIO.indexOf(a);
+                const ib = ORDEN_MESES_CALENDARIO.indexOf(b);
+                if (ia === -1 && ib === -1) return String(a).localeCompare(String(b));
+                if (ia === -1) return 1;  // "Indefinido" u otros valores no reconocidos van al final
+                if (ib === -1) return -1;
+                return ia - ib;
+            });
+        }
+
         function poblarSelectoresFiltros() {
             const selectSucursal = document.getElementById('filter-sucursal');
             const selectMesVenc = document.getElementById('filter-mes-venc');
@@ -2097,16 +2228,25 @@
             Array.from(sucursalesUnicas).sort().forEach(suc => {
                 const opt = document.createElement('option'); opt.value = suc; opt.innerText = suc; selectSucursal.appendChild(opt);
             });
-            Array.from(mesesVencUnicos).sort().forEach(mes => {
+            ordenarMesesCalendario(Array.from(mesesVencUnicos)).forEach(mes => {
                 const opt = document.createElement('option'); opt.value = mes; opt.innerText = mes; selectMesVenc.appendChild(opt);
             });
-            Array.from(mesesRegUnicos).sort().forEach(mes => {
+            ordenarMesesCalendario(Array.from(mesesRegUnicos)).forEach(mes => {
                 const opt = document.createElement('option'); opt.value = mes; opt.innerText = mes; selectMesReg.appendChild(opt);
             });
             
             selectSucursal.value = valorSucPrevio;
             selectMesVenc.value = valorMesVencPrevio;
             selectMesReg.value = valorMesRegPrevio;
+        }
+
+        // El check "Mostrar registros de meses anteriores" también debe
+        // refrescar los <select> de filtros por si el conjunto de meses
+        // disponibles para elegir cambia según lo que hay visible.
+        function toggleMostrarMesesAnteriores() {
+            const chk = document.getElementById('chk-mostrar-meses-anteriores');
+            mostrarMesesAnteriores = !!(chk && chk.checked);
+            actualizarTablaReporte();
         }
 
         function toggleRecuperablesSalientes() {
@@ -2143,23 +2283,63 @@
                 listaVisualizacion = listaVisualizacion.filter(item => (item.estadoGestion || 'Pendiente') !== 'Pendiente');
             }
 
-            // "Recuperables Salientes": el producto es Recuperable según la política
-            // (Viñeta+Laboratorio) Y su vencimiento cae dentro de la ventana de
-            // anticipación que esa misma política define (el número de "meses"
-            // extraído de sus Observaciones, ej. "2 meses" = se vuelve accionable
-            // desde 2 meses antes de vencer). Ej: hoy Agosto, vence Octubre = 2
-            // meses de diferencia; si la política dice "2 meses", sí cuenta.
-            if (filtroRecuperablesSalientes) {
+            // Por defecto se ocultan los registros cuyo mes de vencimiento
+            // tiene 2 o más meses de atraso respecto a hoy (mismo criterio
+            // de "mes actual + mes inmediato anterior" que ya usa el bloqueo
+            // de Estado de Gestión). El check "Mostrar registros de meses
+            // anteriores" desactiva este ocultamiento; y si el usuario elige
+            // un mes puntual en el filtro "Mes Venc.", esa elección siempre
+            // se respeta sin importar el check.
+            const selectMesVencActivo = document.getElementById('filter-mes-venc');
+            const hayMesVencEspecificoSeleccionado = !!(selectMesVencActivo && selectMesVencActivo.value !== '');
+            if (!mostrarMesesAnteriores && !hayMesVencEspecificoSeleccionado) {
                 const hoy = new Date();
                 listaVisualizacion = listaVisualizacion.filter(item => {
-                    const rec = evaluarEstadoRecuperacion(item.proveedor || '', item.laboratorio || '');
-                    if (rec !== 'Recuperable') return false;
-                    const politica = obtenerPolitica(item.proveedor || '', item.laboratorio || '');
-                    if (!politica) return false;
                     const diff = diferenciaMesesCalendario(item.fecha, hoy);
-                    if (diff === null) return false;
-                    return diff >= 0 && diff <= politica.meses;
+                    return diff === null || diff >= -1;
                 });
+            }
+
+            // "Recuperables Salientes": el producto es Recuperable según la política
+            // (Viñeta+Laboratorio) y está en el mes límite para enviarlo: la
+            // política exige enviarlo N meses antes de vencer (el "N" sale de
+            // sus Observaciones, ej. "5 meses"). Los que ya tienen MENOS meses
+            // que el plazo ya no se pueden enviar: se excluyen de esta lista y
+            // se avisan aparte (aviso bajo el botón + etiqueta en la fila).
+            // Ej: política 5 meses → vence en 5 meses = sale; vence en 3 meses
+            // = fuera de plazo, no sale.
+            const elAvisoPlazo = document.getElementById('aviso-recuperables-fuera-plazo');
+            if (filtroRecuperablesSalientes) {
+                const fueraDePlazo = listaVisualizacion.filter(item => {
+                    if ((item.estadoGestion || 'Pendiente') !== 'Pendiente') return false;
+                    const plazo = estadoPlazoPolitica(item);
+                    return plazo && plazo.fueraDePlazo;
+                }).length;
+                if (elAvisoPlazo) {
+                    if (fueraDePlazo > 0) {
+                        elAvisoPlazo.style.display = 'block';
+                        elAvisoPlazo.innerHTML = `⛔ <strong>${fueraDePlazo}</strong> producto(s) Recuperable(s) pendiente(s) ya pasaron el plazo de su política y <strong>ya no se pueden enviar</strong> (no aparecen en esta lista). Quita el filtro para verlos con la etiqueta "Fuera de plazo".`;
+                    } else {
+                        elAvisoPlazo.style.display = 'none';
+                    }
+                }
+                listaVisualizacion = listaVisualizacion.filter(item => {
+                    const plazo = estadoPlazoPolitica(item);
+                    if (!plazo) return false;
+                    return !plazo.fueraDePlazo && plazo.restantes <= plazo.meses;
+                });
+            } else if (elAvisoPlazo) {
+                elAvisoPlazo.style.display = 'none';
+            }
+
+            // Filtro por Prioridad de Irrecuperables a trabajar (Alta/Baja).
+            // Los Recuperables no tienen prioridad (calcularPrioridadTrabajo
+            // devuelve null) y quedan excluidos automáticamente cuando este
+            // filtro está activo.
+            if (filtroPrioridadActivo !== '') {
+                listaVisualizacion = listaVisualizacion.filter(item =>
+                    calcularPrioridadTrabajo(item, obtenerVentaEnSucursal(item)) === filtroPrioridadActivo
+                );
             }
 
             // Buscador de producto (aplica a cualquier rol)
@@ -2172,6 +2352,22 @@
             }
 
             actualizarDashboardRiesgo();
+
+            // Conteo de prioridades dentro de lo que quedó visible, para que
+            // se sepa de un vistazo cuántos Irrecuperables de cada nivel hay
+            // que trabajar (independientemente de si el filtro de prioridad
+            // está o no activo).
+            const elConteoPrioridad = document.getElementById('prioridad-conteo');
+            if (elConteoPrioridad) {
+                let cAlta = 0, cBaja = 0;
+                listaVisualizacion.forEach(item => {
+                    const p = calcularPrioridadTrabajo(item, obtenerVentaEnSucursal(item));
+                    if (p === 'Alta') cAlta++;
+                    else if (p === 'Baja') cBaja++;
+                });
+                elConteoPrioridad.innerText = `🔴 ${cAlta} Alta · 🟢 ${cBaja} Baja`;
+            }
+
             // Los <select> de Sucursal/Mes Venc./Mes Reg. dependen del conjunto
             // completo de datos, no del filtro activo: solo se reconstruyen
             // cuando el llamador avisa que los datos cambiaron.
@@ -2194,15 +2390,11 @@
 
             listaVisualizacion.forEach(item => {
               try {
-                let celdaAcciones = esSuper ? `<td><button class="btn-delete-item" onclick='eliminarRegistroVencido(${item.id})'>Eliminar</button></td>` : '';
+                let celdaAcciones = esSuper ? `<td>${botonEliminarHTML(item.id)}</td>` : '';
                 const productoEscapado = String(item.producto || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 let productoHTML = esAdminSup ? `<strong class="clickable-product" onclick="verTop10Ventas('${productoEscapado}')">${item.producto}</strong>` : `<strong>${item.producto}</strong>`;
 
-                let ventaHistoricaSucursal = 0;
-                if (mapaTop10Ventas[item.producto]) {
-                    let recordSuc = mapaTop10Ventas[item.producto].find(f => String(f.sucursal).toUpperCase() === String(item.sucursal).toUpperCase());
-                    if (recordSuc) ventaHistoricaSucursal = recordSuc.quantity;
-                }
+                let ventaHistoricaSucursal = obtenerVentaEnSucursal(item);
 
                 let laboratorioDisplay = item.laboratorio || "Sin Politica";
                 let proveedorDisplay = item.proveedor || "Sin Politica";
@@ -2212,12 +2404,15 @@
                 let tooltipPolitica = politicaInfo ? ' title="' + politicaInfo.observaciones.replace(/"/g,'&quot;') + '"' : '';
                 let badgeEstadoClase = estRec === "Recuperable" ? "badge-recuperable" : "badge-irrecuperable";
 
+                let prioridadItem = calcularPrioridadTrabajo(item, ventaHistoricaSucursal);
+                let prioInfo = infoPrioridad(prioridadItem);
+                let prioridadHTML = `<span class="badge ${prioInfo.clase}" title="Alta: la venta no llega al 400% de lo que vence · Baja: la venta es 400% (4×) o más de lo que vence.">${prioInfo.icono} ${prioridadItem ? prioridadItem.toUpperCase() : 'N/A'}</span>`;
+
                 let actualGestion = item.estadoGestion || "Pendiente";
                 let colorFondoSelect = colorEstadoGestion(actualGestion);
 
                 let selectorGestionHTML;
-                const editablePorMes = esRegistroDelMesGestionable(item);
-                if (actualGestion === 'Pendiente' && editablePorMes) {
+                if (actualGestion === 'Pendiente') {
                     const opcionesGestion = ESTADOS_GESTION.map(e =>
                         `<option value="${e.valor}">${e.icono} ${e.valor}</option>`
                     ).join('');
@@ -2226,12 +2421,6 @@
                             <option value="Pendiente" selected>⏳ Pendiente</option>
                             ${opcionesGestion}
                         </select>
-                    `;
-                } else if (actualGestion === 'Pendiente' && !editablePorMes) {
-                    selectorGestionHTML = `
-                        <span class="badge" style="background-color: #f8d7da; color:#842029; cursor: not-allowed;" title="Este registro es de un mes anterior al permitido. Solo se puede gestionar el mes actual y el mes inmediato anterior.">
-                            🔒 Bloqueado (mes anterior)
-                        </span>
                     `;
                 } else {
                     selectorGestionHTML = `
@@ -2248,18 +2437,37 @@
                     <td><span class="badge" style="background-color: #eaf2f8; color: #2980b9; border: 1px solid #a9cce3; font-weight:bold;">${laboratorioDisplay}</span></td>
                     <td><span class="badge" style="background-color: #f1f3f5; color: #495057; border: 1px solid #ced4da; font-weight:bold;">${proveedorDisplay}</span></td>
                     <td style="font-weight: bold; text-align: center;">${parseInt(item.cantidad).toLocaleString('es-HN')}</td>
-                    <td><span class="badge ${badgeEstadoClase}" ${tooltipPolitica} style="cursor:${politicaInfo?'help':'default'};">${estRec.toUpperCase()}${politicaInfo ? ' ℹ️' : ''}</span></td>
+                    <td><span class="badge ${badgeEstadoClase}" ${tooltipPolitica} style="cursor:${politicaInfo?'help':'default'};">${estRec.toUpperCase()}${politicaInfo ? ' ℹ️' : ''}</span>${(() => {
+                        if ((item.estadoGestion || 'Pendiente') !== 'Pendiente') return '';
+                        const plazo = estadoPlazoPolitica(item);
+                        if (!plazo || !plazo.fueraDePlazo) return '';
+                        const txt = plazo.restantes < 0
+                            ? 'Ya venció'
+                            : `Le quedan ${plazo.restantes} mes(es)`;
+                        return `<br><span class="badge" style="background:#fff3cd; color:#856404; border:1px solid #ffe69c; font-size:0.75em; margin-top:4px; cursor:help;" title="La política exige enviarlo ${plazo.meses} mes(es) antes de vencer. ${txt}: ya no se puede enviar.">⛔ Fuera de plazo</span>`;
+                    })()}</td>
                     <td><span class="badge badge-venta">${ventaHistoricaSucursal.toLocaleString('es-HN')}</span></td>
+                    <td style="text-align: center;">${prioridadHTML}</td>
                     <td style="text-align: center;">${selectorGestionHTML}</td>
                     <td><span class="badge" style="background-color: #f1f3f5; color: #495057;">${item.mes}</span></td>
                     <td><span class="badge" style="background-color: #eef2f7; color: #0056b3;">${item.anio}</span></td>
-                    <td><span style="color: #dc3545; font-weight: bold;">${item.fecha}</span></td>
+                    <td><span class="badge" style="background-color: #ede7f6; color: #4527a0; border: 1px solid #d1c4e9;">🗓️ ${item.mesRegistro || 'Indefinido'}</span></td>
                     <td><span class="badge" style="background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6;">👤 ${item.usuario}</span></td>
                     <td><span class="badge" style="background-color: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9;">📅 ${item.fechaRegistro}</span></td>
                     ${celdaAcciones}
                 </tr>`);
               } catch (error) {
                 console.error("No se pudo mostrar un registro (datos corruptos):", item, error);
+                // Un registro dañado no se puede dibujar normal, pero el Super
+                // Usuario debe poder eliminarlo siempre: se muestra una fila
+                // mínima con su botón de eliminar.
+                if (esSuper) {
+                    const idDanado = item && item.id != null ? item.id : '';
+                    const refDanado = escaparAtributoHTML(
+                        [item && item.sucursal, item && item.producto].filter(Boolean).join(' · ') || 'sin datos legibles'
+                    );
+                    filasHTML.push(`<tr style="background:#fff3cd;"><td colspan="14" style="color:#856404; font-weight:bold;">⚠️ Registro dañado (ID: ${escaparAtributoHTML(idDanado)}) — ${refDanado}. No se puede mostrar completo; puedes eliminarlo.</td><td>${botonEliminarHTML(idDanado)}</td></tr>`);
+                }
               }
             });
 
@@ -2290,17 +2498,66 @@
 
         function cerrarModal() { document.getElementById('top10-modal').style.display = 'none'; }
 
+        // Escapa texto para usarlo dentro de un atributo HTML entre comillas dobles.
+        function escaparAtributoHTML(valor) {
+            return String(valor == null ? '' : valor)
+                .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // Botón "Eliminar" de una fila. El id viaja como TEXTO en data-id, así
+        // funciona sin importar si el id es numérico o texto (antes un id con
+        // letras rompía el onclick y el botón no hacía nada).
+        function botonEliminarHTML(id) {
+            return `<button class="btn-delete-item" data-id="${escaparAtributoHTML(id)}" onclick="eliminarRegistroVencido(this.dataset.id)">Eliminar</button>`;
+        }
+
+        // ── Eliminaciones pendientes de confirmar en el Sheet ──
+        // El borrado en Sheets se envía sin poder confirmar la respuesta
+        // (no-cors). Se guarda el id aquí hasta comprobar en una sincronización
+        // que ya no existe en el Sheet; mientras tanto el registro se mantiene
+        // oculto y se reintenta el borrado, para que no "reviva" al sincronizar.
+        const CLAVE_ELIMINADOS_PENDIENTES = 'vencidos_eliminados_pendientes';
+        function leerEliminadosPendientes() {
+            try { return JSON.parse(localStorage.getItem(CLAVE_ELIMINADOS_PENDIENTES) || '[]'); }
+            catch (e) { return []; }
+        }
+        function guardarEliminadosPendientes(lista) {
+            try { localStorage.setItem(CLAVE_ELIMINADOS_PENDIENTES, JSON.stringify(lista)); }
+            catch (e) { console.error('No se pudo guardar la lista de eliminaciones pendientes:', e); }
+        }
+        function aplicarEliminacionesPendientes(registrosSheet) {
+            const pendientes = leerEliminadosPendientes();
+            if (!pendientes.length) return registrosSheet;
+            const idsEnSheet = new Set(registrosSheet.map(r => String(r.id)));
+            // Los que ya no están en el Sheet quedaron confirmados como eliminados.
+            const siguenEnSheet = pendientes.filter(id => idsEnSheet.has(String(id)));
+            guardarEliminadosPendientes(siguenEnSheet);
+            if (esSuperUsuario(usuarioActual)) siguenEnSheet.forEach(id => enviarEliminacionASheets(id));
+            const ocultar = new Set(siguenEnSheet.map(String));
+            return registrosSheet.filter(r => !ocultar.has(String(r.id)));
+        }
+
         function eliminarRegistroVencido(id) {
             if (!esSuperUsuario(usuarioActual)) {
                 alert("⚠️ Solo un Super Usuario puede eliminar registros.");
                 return;
             }
-            if (confirm("¿Eliminar este producto?")) {
-                globalVencidos = globalVencidos.filter(item => item.id !== id);
-                localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
-                actualizarTablaReporte(true);
+            const idTxt = String(id);
+            const registro = globalVencidos.find(item => String(item.id) === idTxt);
+            const detalle = registro && registro.producto ? `\n\n${registro.producto}${registro.sucursal ? ' (' + registro.sucursal + ')' : ''}` : '';
+            if (confirm("¿Eliminar este producto?" + detalle)) {
+                const idOriginal = registro ? registro.id : id;
+                globalVencidos = globalVencidos.filter(item => String(item.id) !== idTxt);
+                try { localStorage.setItem('vencidos', JSON.stringify(globalVencidos)); }
+                catch (e) { console.error('No se pudo actualizar el almacenamiento local:', e); }
 
-                enviarEliminacionASheets(id);
+                const pendientes = leerEliminadosPendientes();
+                if (!pendientes.some(p => String(p) === idTxt)) pendientes.push(idOriginal);
+                guardarEliminadosPendientes(pendientes);
+
+                actualizarTablaReporte(true);
+                enviarEliminacionASheets(idOriginal);
             }
         }
 
@@ -2311,7 +2568,7 @@
 
             if (listaVencidos.length === 0) { alert("No hay registros para exportar."); return; }
 
-            let xmlFile = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table { border-collapse: collapse; font-family: 'Segoe UI', sans-serif; } th { background-color: #0056b3; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #dee2e6; height: 30px; } td { border: 1px solid #dee2e6; height: 22px; vertical-align: middle; } .fila-padre { background-color: #f2f4f7; font-weight: bold; } .top3 { background-color: #e2f0d9; italic: true; } .center { text-align: center; } .right { text-align: right; } </style></head><body><table><thead><tr><th>Sucursal Origen</th><th style="width:320px;">Producto / Medicamento</th><th>Laboratorio</th><th>Viñeta</th><th>Cant. Vencida</th><th>Estado Política</th><th>Venta Histórica Origen</th><th>Estado Gestión</th><th>Mes Venc.</th><th>Año Venc.</th><th>Fecha Vencimiento</th><th>Registrado El</th><th style="width:300px;">Info Comercial / Destino Recomendado</th><th>Venta Histórica Destino</th></tr></thead><tbody>`;
+            let xmlFile = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>table { border-collapse: collapse; font-family: 'Segoe UI', sans-serif; } th { background-color: #0056b3; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #dee2e6; height: 30px; } td { border: 1px solid #dee2e6; height: 22px; vertical-align: middle; } .fila-padre { background-color: #f2f4f7; font-weight: bold; } .top3 { background-color: #e2f0d9; italic: true; } .center { text-align: center; } .right { text-align: right; } </style></head><body><table><thead><tr><th>Sucursal Origen</th><th style="width:320px;">Producto / Medicamento</th><th>Laboratorio</th><th>Viñeta</th><th>Cant. Vencida</th><th>Estado Política</th><th>Prioridad</th><th>Venta Histórica Origen</th><th>Estado Gestión</th><th>Mes Venc.</th><th>Año Venc.</th><th>Fecha Vencimiento</th><th>Mes Registro</th><th>Registrado El</th><th style="width:300px;">Info Comercial / Destino Recomendado</th><th>Venta Histórica Destino</th></tr></thead><tbody>`;
 
             listaVencidos.forEach(item => {
                 let labExp = item.laboratorio || "Sin Politica";
@@ -2319,21 +2576,18 @@
                 let estRec = evaluarEstadoRecuperacion(provExp, labExp);
                 let estGestionTxt = item.estadoGestion || "Pendiente";
 
-                let ventaHistoricaSucursal = 0;
-                if (mapaTop10Ventas[item.producto]) {
-                    let recordSuc = mapaTop10Ventas[item.producto].find(f => String(f.sucursal).toUpperCase() === String(item.sucursal).toUpperCase());
-                    if (recordSuc) ventaHistoricaSucursal = recordSuc.quantity;
-                }
+                let ventaHistoricaSucursal = obtenerVentaEnSucursal(item);
+                let prioridadTxt = calcularPrioridadTrabajo(item, ventaHistoricaSucursal) || "N/A";
 
-                xmlFile += `<tr class="fila-padre"><td class="center">${item.sucursal}</td><td>${item.producto}</td><td>${labExp}</td><td>${provExp}</td><td class="center">${parseInt(item.cantidad)}</td><td class="center">${estRec.toUpperCase()}</td><td class="center">${ventaHistoricaSucursal}</td><td class="center">${estGestionTxt}</td><td class="center">${item.mes}</td><td class="center">${item.anio}</td><td class="center">${item.fecha}</td><td class="center">${item.fechaRegistro}</td><td></td><td></td></tr>`;
+                xmlFile += `<tr class="fila-padre"><td class="center">${item.sucursal}</td><td>${item.producto}</td><td>${labExp}</td><td>${provExp}</td><td class="center">${parseInt(item.cantidad)}</td><td class="center">${estRec.toUpperCase()}</td><td class="center">${prioridadTxt.toUpperCase()}</td><td class="center">${ventaHistoricaSucursal}</td><td class="center">${estGestionTxt}</td><td class="center">${item.mes}</td><td class="center">${item.anio}</td><td class="center">${item.fecha}</td><td class="center">${item.mesRegistro || ''}</td><td class="center">${item.fechaRegistro}</td><td></td><td></td></tr>`;
                 let sucursalesTop = mapaTop10Ventas[item.producto] ? mapaTop10Ventas[item.producto].slice(0, 10) : [];
                 if (sucursalesTop.length > 0) {
                     sucursalesTop.forEach((farmacia, idx) => {
                         let esTop3Clase = idx < 3 ? 'top3' : '';
-                        xmlFile += `<tr style="mso-outline-level:1; display:none;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="${esTop3Clase}" style="color:#555; padding-left: 15px;">🏆 Top #${idx+1} Vendedora: Sucursal <strong>${farmacia.sucursal}</strong></td><td class="${esTop3Clase} right" style="color:#333;">${parseInt(farmacia.quantity)}</td></tr>`;
+                        xmlFile += `<tr style="mso-outline-level:1; display:none;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="${esTop3Clase}" style="color:#555; padding-left: 15px;">🏆 Top #${idx+1} Vendedora: Sucursal <strong>${farmacia.sucursal}</strong></td><td class="${esTop3Clase} right" style="color:#333;">${parseInt(farmacia.quantity)}</td></tr>`;
                     });
                 } else {
-                    xmlFile += `<tr style="mso-outline-level:1; display:none;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td style="color:#999; font-style:italic; padding-left: 15px;">No hay historial de ventas masivas cargado.</td><td></td></tr>`;
+                    xmlFile += `<tr style="mso-outline-level:1; display:none;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td style="color:#999; font-style:italic; padding-left: 15px;">No hay historial de ventas masivas cargado.</td><td></td></tr>`;
                 }
             });
 
@@ -2603,10 +2857,11 @@
                     item.estadoRecuperacion = evaluarEstadoRecuperacion(item.proveedor, item.laboratorio);
                 });
 
-                const idsEnSheet = new Set(registrosSheet.map(r => String(r.id)));
+                const registrosVigentes = aplicarEliminacionesPendientes(registrosSheet);
+                const idsEnSheet = new Set(registrosVigentes.map(r => String(r.id)));
                 const pendientesLocales = globalVencidos.filter(item => !idsEnSheet.has(String(item.id)));
 
-                globalVencidos = [...registrosSheet, ...pendientesLocales];
+                globalVencidos = [...registrosVigentes, ...pendientesLocales];
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
                 actualizarTablaReporte(true);
             } catch (error) {
@@ -2657,11 +2912,11 @@
                 });
 
                 // Reemplazo total: lo que esté en el Sheet es la única fuente de verdad.
-                globalVencidos = registrosSheet;
+                globalVencidos = aplicarEliminacionesPendientes(registrosSheet);
                 localStorage.setItem('vencidos', JSON.stringify(globalVencidos));
                 actualizarTablaReporte(true);
 
-                Swal.fire('Sincronizado', `Se cargaron ${registrosSheet.length} registro(s) desde Google Sheets.`, 'success');
+                Swal.fire('Sincronizado', `Se cargaron ${globalVencidos.length} registro(s) desde Google Sheets.`, 'success');
             } catch (error) {
                 console.error("Error al sincronizar manualmente con Sheets:", error);
                 Swal.fire('Error al sincronizar', 'No se pudo traer la información del Sheet: ' + error.message, 'error');
